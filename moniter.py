@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from database import init_db, insert_to_health_metrics, insert_to_incident_reports
 import psutil
 import time
 import logging
@@ -49,6 +50,8 @@ def total_memory_usage():
     return memory_usage, health_status
 
 
+init_db()  # Initialize the database and tables
+
 try:
     logger.info("Health monitor started")
     while True:
@@ -73,12 +76,15 @@ try:
         ]:
             msg = f"{label} usage: {value}% [{health}]"
             if health == "CRITICAL":
+                insert_to_incident_reports(cpu_usage, disk_usage, memory_usage)
                 logger.critical(msg)
             elif health == "WARNING":
                 logger.warning(msg)
             else:
                 logger.info(msg)
-
+        
+        
+        insert_to_health_metrics(cpu_usage, disk_usage, memory_usage)
         time.sleep(10)
 
 except KeyboardInterrupt:
