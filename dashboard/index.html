@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>opsPilot Dashboard</title>
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #0f1117;
+  color: #e6e6e6;
+  margin: 0;
+  padding: 2rem;
+}
+h1 { font-weight: 600; }
+.cards {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.card {
+  background: #1a1d27;
+  border-radius: 12px;
+  padding: 1.5rem;
+  flex: 1;
+  text-align: center;
+}
+.card h2 { margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #9aa0ac; }
+.card .value { font-size: 2rem; font-weight: 700; }
+.healthy { color: #4ade80; }
+.warning { color: #facc15; }
+.critical { color: #f87171; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #2a2d3a; }
+#status { font-size: 0.85rem; color: #9aa0ac; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+<h1>opsPilot Dashboard</h1>
+<div id="status">Connecting...</div>
+
+<div class="cards">
+  <div class="card">
+    <h2>CPU</h2>
+    <div class="value" id="cpu">--%</div>
+  </div>
+  <div class="card">
+    <h2>Memory</h2>
+    <div class="value" id="memory">--%</div>
+  </div>
+  <div class="card">
+    <h2>Disk</h2>
+    <div class="value" id="disk">--%</div>
+  </div>
+</div>
+
+<h2>Recent Incidents</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Severity</th>
+      <th>Server</th>
+      <th>Value</th>
+      <th>Detected</th>
+      <th>Resolved</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="incidents-body">
+    <tr><td colspan="7">Loading...</td></tr>
+  </tbody>
+</table>
+
+<script>
+// ---- Helper: color-code a numeric % based on thresholds ----
+function statusClass(value) {
+  if (value >= 90) return "critical";
+  if (value >= 80) return "warning";
+  return "healthy";
+}
+
+// ---- Helper: color-code a severity string ----
+function severityClass(sev) {
+  if (sev === "HIGH") return "critical";
+  if (sev === "MEDIUM") return "warning";
+  return "healthy";
+}
+
+function updateMetric(id, value) {
+  const el = document.getElementById(id);
+  el.textContent = value.toFixed(1) + "%";
+  el.className = "value " + statusClass(value);
+}
+
+// ---- WebSocket: live CPU / RAM / Disk ----
+const ws = new WebSocket("ws://127.0.0.1:8000/ws/live-status");
+
+ws.onopen = () => {
+  document.getElementById("status").textContent = "Connected — live updates active";
+};
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  updateMetric("cpu", data.cpu_usage);
+  updateMetric("memory", data.memory_usage);
+  updateMetric("disk", data.disk_usage);
+};
+
+ws.onclose = () => {
+  document.getElementById("status").textContent = "Disconnected — refresh page to reconnect";
+};
+
+// ---- REST: recent incidents, refreshed every 15s ----
+async function loadIncidents() {
+  const res = await fetch("http://127.0.0.1:8000/incidents");
+  const data = await res.json();
+  const body = document.getElementById("incidents-body");
+
+  if (data.length === 0) {
+    body.innerHTML = "<tr><td colspan='7'>No incidents yet</td></tr>";
+    return;
+  }
+
+  body.innerHTML = data.slice(0, 10).map(row => `
+    <tr>
+      <td>${row.type}</td>
+      <td class="${severityClass(row.severity)}">${row.severity}</td>
+      <td>${row.server}</td>
+      <td>${row.metric_value}%</td>
+      <td>${row.detected_at}</td>
+      <td>${row.resolved_at || ""}</td>
+      <td>${row.status}</td>
+    </tr>
+  `).join("");
+}
+
+loadIncidents();
+setInterval(loadIncidents, 15000);
+</script>
+</body>
+</html>

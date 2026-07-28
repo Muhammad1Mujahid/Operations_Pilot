@@ -1,8 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
+from fastapi.staticfiles import StaticFiles
+import asyncio
 import sqlite3
 
 app = FastAPI()
-DB_NAME = "Health_mointer.db"   # match your exact existing filename
+
+app.mount("/dashboard", StaticFiles(directory="dashboard", html=True), name="dashboard")
+DB_NAME = "Health_moniter.db"   # match your exact existing filename
 
 
 def get_connection():
@@ -40,8 +44,36 @@ def history(limit: int = 20):
 def incidents():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM incident_reports ORDER BY id DESC")
+    cursor.execute("SELECT * FROM incidents ORDER BY id DESC")
     rows = cursor.fetchall()
     conn.close()
 
     return [dict(row) for row in rows]
+
+
+def get_latest_metric():
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM health_metrics ORDER BY id DESC LIMIT 1")
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+@app.websocket("/ws/live-status")
+async def websocket_status(websocket: WebSocket):
+    await websocket.accept()
+    last_sent_id = None
+
+    try:
+        while True:
+            latest = get_latest_metric()
+
+            if latest and latest["id"] != last_sent_id:
+                await websocket.send_json(latest)
+                last_sent_id = latest["id"]
+
+            await asyncio.sleep(2)   # check DB every 2s for a new row
+    except Exception:
+        pass
