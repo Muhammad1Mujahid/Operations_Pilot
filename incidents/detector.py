@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime
 from incidents.severity import get_severity
+from notifications.notifier import send_alert
 
 DB_NAME = "Health_moniter.db"
 
@@ -33,7 +34,6 @@ def resolve_incident(conn, incident_id):
 
 
 def check_and_record(incident_type, value, server="Ubuntu-01"):
-    """Call once per metric, every loop iteration in moniter.py."""
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
 
@@ -43,9 +43,10 @@ def check_and_record(incident_type, value, server="Ubuntu-01"):
     if severity:
         if not existing:
             create_incident(conn, incident_type, severity, server, value)
+            send_alert(incident_type, severity, server, value)   # ← new line
         # else: already open — idempotency, do nothing
     else:
         if existing:
-            resolve_incident(conn, existing["id"])  # auto-resolve
+            resolve_incident(conn, existing["id"])
 
     conn.close()
