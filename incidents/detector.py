@@ -2,6 +2,8 @@ import sqlite3
 from datetime import datetime
 from incidents.severity import get_severity
 from notifications.notifier import send_alert
+from ai.analyzer import suggest_root_cause
+from database import update_incident_ai_suggestion
 
 DB_NAME = "Health_moniter.db"
 
@@ -22,6 +24,7 @@ def create_incident(conn, incident_type, severity, server, value):
         VALUES (?, ?, ?, ?, ?, 'OPEN')
     ''', (incident_type, severity, server, value, datetime.now().isoformat()))
     conn.commit()
+    return cursor.lastrowid   # ← new line: returns the new incident's id
 
 
 def resolve_incident(conn, incident_id):
@@ -42,8 +45,12 @@ def check_and_record(incident_type, value, server="Ubuntu-01"):
 
     if severity:
         if not existing:
-            create_incident(conn, incident_type, severity, server, value)
-            send_alert(incident_type, severity, server, value)   # ← new line
+            incident_id = create_incident(conn, incident_type, severity, server, value)
+            send_alert(incident_type, severity, server, value)
+
+            cause, fix = suggest_root_cause(incident_type, severity, server, value)
+            if cause or fix:
+                update_incident_ai_suggestion(incident_id, cause, fix)
         # else: already open — idempotency, do nothing
     else:
         if existing:

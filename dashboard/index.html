@@ -57,14 +57,16 @@ th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #2a2d3a; }
 <table>
   <thead>
     <tr>
-      <th>Type</th>
-      <th>Severity</th>
-      <th>Server</th>
-      <th>Value</th>
-      <th>Detected</th>
-      <th>Resolved</th>
-      <th>Status</th>
-    </tr>
+  <th>Type</th>
+  <th>Severity</th>
+  <th>Server</th>
+  <th>Value</th>
+  <th>Detected</th>
+  <th>Resolved</th>
+  <th>Status</th>
+  <th>AI Suggested Cause</th>
+  <th>Suggested Fix</th>
+</tr>
   </thead>
   <tbody id="incidents-body">
     <tr><td colspan="7">Loading...</td></tr>
@@ -122,16 +124,18 @@ async function loadIncidents() {
   }
 
   body.innerHTML = data.slice(0, 10).map(row => `
-    <tr>
-      <td>${row.type}</td>
-      <td class="${severityClass(row.severity)}">${row.severity}</td>
-      <td>${row.server}</td>
-      <td>${row.metric_value}%</td>
-      <td>${row.detected_at}</td>
-      <td>${row.resolved_at || ""}</td>
-      <td>${row.status}</td>
-    </tr>
-  `).join("");
+  <tr>
+    <td>${row.type}</td>
+    <td class="${severityClass(row.severity)}">${row.severity}</td>
+    <td>${row.server}</td>
+    <td>${row.metric_value}%</td>
+    <td>${row.detected_at}</td>
+    <td>${row.resolved_at || ""}</td>
+    <td>${row.status}</td>
+    <td>${row.suggested_cause || "—"}</td>
+    <td>${row.suggested_fix || "—"}</td>
+  </tr>
+`).join("");
 }
 
 loadIncidents();
