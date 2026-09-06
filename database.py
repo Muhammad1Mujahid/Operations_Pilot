@@ -1,6 +1,7 @@
 import sqlite3
+import os
 
-DB_NAME = "Health_moniter.db"
+DB_NAME = os.path.join("data", "Health_moniter.db")
 
 def add_ai_columns():
     conn = sqlite3.connect(DB_NAME)

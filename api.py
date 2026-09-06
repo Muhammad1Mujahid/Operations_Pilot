@@ -1,4 +1,5 @@
 from fastapi import FastAPI, WebSocket
+from database import DB_NAME
 from fastapi.staticfiles import StaticFiles
 import asyncio
 import sqlite3
@@ -6,7 +7,6 @@ import sqlite3
 app = FastAPI()
 
 app.mount("/dashboard", StaticFiles(directory="dashboard", html=True), name="dashboard")
-DB_NAME = "Health_moniter.db"   # match your exact existing filename
 
 
 def get_connection():

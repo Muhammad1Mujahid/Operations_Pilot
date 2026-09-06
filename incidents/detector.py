@@ -4,8 +4,7 @@ from incidents.severity import get_severity
 from notifications.notifier import send_alert
 from ai.analyzer import suggest_root_cause
 from database import update_incident_ai_suggestion
-
-DB_NAME = "Health_moniter.db"
+from database import DB_NAME
 
 
 def get_open_incident(conn, incident_type):
