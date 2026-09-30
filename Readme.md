@@ -18,6 +18,8 @@ It was built as a hands-on learning project to go deep on Python, systems monito
 
 ---
 
+![Tests](https://github.com/Muhammad1Mujahid/Operations_Pilot/actions/workflows/tests.yml/badge.svg)
+
 ## Architecture
 
 ```
