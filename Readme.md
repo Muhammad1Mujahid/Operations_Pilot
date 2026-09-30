@@ -1,5 +1,8 @@
 # opsPilot
 
+![Tests](https://github.com/Muhammad1Mujahid/Operations_Pilot/actions/workflows/tests.yml/badge.svg)
+
+
 **opsPilot** is a lightweight, intelligent IT operations monitoring platform built from scratch in Python. It continuously watches a machine's CPU, memory, and disk health, automatically detects and tracks incidents, alerts a human by email the moment something goes wrong, and uses an LLM to suggest a likely root cause and fix — all visible on a live, auto-updating dashboard.
 
 It was built as a hands-on learning project to go deep on Python, systems monitoring, databases, REST/WebSocket APIs, and practical LLM integration — not by following a single tutorial, but by designing and debugging each layer end-to-end.
@@ -18,7 +21,6 @@ It was built as a hands-on learning project to go deep on Python, systems monito
 
 ---
 
-![Tests](https://github.com/Muhammad1Mujahid/Operations_Pilot/actions/workflows/tests.yml/badge.svg)
 
 ## Architecture
 
