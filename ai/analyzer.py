@@ -4,7 +4,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    return _client
+
 
 def suggest_root_cause(incident_type, severity, server, value):
     prompt = f"""You are an IT operations assistant. An automated monitoring
@@ -24,6 +32,7 @@ FIX: <your answer>
 """
 
     try:
+        client = _get_client()
         response = client.models.generate_content(
             model="gemini-3-flash-preview",
             contents=prompt
